@@ -21,7 +21,6 @@ class Message():
 
     def parse(self):
         print(f"{self.direction} Parsing '{str.upper(self.bytes.hex())}'")
-        print(f"bytes: {self.bytes}")
         self.som = str.upper(self.bytes[0:1].hex()) # byte 0
         self.message_length = struct.unpack("<H", self.bytes[1:3])[0] # byte 1,2; 16-bit length
         self.message_class = str.upper(self.bytes[3:4].hex()) # byte 3
@@ -82,16 +81,18 @@ class Message():
             return f"{self.message_class}, UNKNOWN TOO"
 
     def message_bruteforce(self):
+        print("=== bruteforcing message as lsb unsigned short")
         for i in range(0, len(self.message_bytes)):
             try:
                 print(struct.unpack('<H', self.message_bytes[i:i+2])[0])
             except struct.error as e:
-                print(f"quack: {e}")
-                print(f"i: {i}, len: {len(self.message_bytes)}")
+                print(f"error: {e}; index: {i}, msg length: {len(self.message_bytes)}")
+        print("=== bruteforcing end")
 
     def prettyprint(self):
         print(f"[{self.direction}] SOM: 0x{self.som}, length: {self.message_length} (ushortle), class: 0x{self.pp_message_class()}, seq: 0x{self.seq_number}, type: 0x{self.pp_message_type()}")
         print(f"  Message (hex): {self.message}")
+        print(f"  Message (bytes): {self.bytes}")
         print(f"  Checksum: {self.checksum} (ushortle), EOM: 0x{self.eom}")
         print(f"  Valid checksum: {self.checksum == self.computed_checksum}")
         print(f"  Valid length: {self.message_length == len(self.bytes)}")
@@ -108,8 +109,21 @@ def pretty(line):
     message.validate()
     message.prettyprint()
 
+if len(sys.argv) <= 1 or len(sys.argv) > 3:
+    print(f"Usage: {sys.argv[0]} <trace file name.txt> [number of lines to process]")
+    exit()
+
+if len(sys.argv) == 2:
+    process = None
+else:
+    process = int(sys.argv[2])
+
+processed = 0
 with open(sys.argv[1], 'r') as file:
     for line in file.readlines():
         if not line.startswith("#"):
+            if process and processed >= process:
+                break
             pretty(line)
             print("")
+            processed += 1
