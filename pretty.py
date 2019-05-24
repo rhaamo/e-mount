@@ -53,7 +53,7 @@ class Message():
         if self.message_type == '03':
             return "03, aperture"
         elif self.message_type == '04':
-            return "04, unknown"
+            return "04, unknown (preceds an 0x05 aperture status message)"
         elif self.message_type == '05':
             return "05, aperture status"
         elif self.message_type == '06':
@@ -112,7 +112,10 @@ class Message():
             print(f"static?(00): {self.message_bytes[6:7].hex()}")
             print(f"static?(00): {self.message_bytes[7:8].hex()}")
             print(f"static?(00): {self.message_bytes[8:9].hex()}")
-            print(f"leftover?: {self.message_bytes[9:].hex()}")
+            print(f"(3F): {self.message_bytes[9:10].hex()}")
+            print(f"(10): {self.message_bytes[10:11].hex()}")
+            print(f"(00): {self.message_bytes[11:12].hex()}")
+            print(f"leftover?: {self.message_bytes[12:].hex()}")
         elif self.message_type == '05': # aperture status
             print(f"Focus ?: {self.message_bytes[20:22].hex()}")
             print(f"Focus pos: {self.message_bytes[23:24].hex()}")
@@ -120,6 +123,9 @@ class Message():
             print(f"Aperture??: {self.message_bytes[33:40].hex()}")
             print(f"Focus moving flag: {self.message_bytes[60:61].hex()}")
             print(f"Target 1: {self.message_bytes[77:78].hex()}")
+            print(f"Target 2: {self.message_bytes[78:79].hex()}")
+            print(f"??: {self.message_bytes[81:82].hex()}")
+            print(f"{self.message_bytes[84:85].hex()}")
         elif self.message_type == '03': # aperture
             print(f"Liveness? (00/01): {self.message_bytes[12:13].hex()}")
             print(f"Target 1? (15/17): {self.message_bytes[21:22].hex()}")
