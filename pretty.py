@@ -30,7 +30,10 @@ class Message():
         self.message_bytes = self.bytes[6:-3]
         self.checksum = struct.unpack("<H", self.bytes[-3:-1])[0] # byte -2
         self.eom = str.upper(self.bytes[-1:].hex()) # byte -1
-        self.computed_checksum = (self.bytes[self.message_length - 2] << 8) + self.bytes[self.message_length - 3]
+        try:
+            self.computed_checksum = (self.bytes[self.message_length - 2] << 8) + self.bytes[self.message_length - 3]
+        except IndexError:
+            self.computed_checksum = None
 
     def validate(self):
         if self.som != 'F0':
@@ -39,7 +42,7 @@ class Message():
         if self.message_class not in ['01', '02', '03']:
             print(f"Unknown message class: '0x{self.message_class}'")
             return False
-        if self.message_type not in ['03', '04', '05', '06', '1C', '1D', '1F', '22', '2F', '3C']:
+        if self.message_type not in ['03', '04', '05', '06', '1C', '1D', '1F', '22', '2F', '3C', '28']:
             print(f"Unknown message type: '0x{self.message_type}'")
             return False
         if self.eom != '55':
@@ -67,6 +70,8 @@ class Message():
             return "2F, echo request"
         elif self.message_type == '3C':
             return "3C, move at speed"
+        elif self.message_type == '28':
+            return "28, take picture ?"
         else:
             return f"{self.message_type} UNKNOWN"
 
@@ -85,18 +90,56 @@ class Message():
         for i in range(0, len(self.message_bytes)):
             try:
                 print(struct.unpack('<H', self.message_bytes[i:i+2])[0])
+                #print(struct.unpack('<h', self.message_bytes[i:i+2])[0])
+                #print(struct.unpack('<I', self.message_bytes[i:i+4])[0])
+                #print(struct.unpack('<i', self.message_bytes[i:i+4])[0])
+                #print(struct.unpack('<B', self.message_bytes[i:i+1])[0].split('\0', 1)[0])
             except struct.error as e:
                 print(f"error: {e}; index: {i}, msg length: {len(self.message_bytes)}")
         print("=== bruteforcing end")
+
+    def decode_message(self):
+        if self.message_type == '06': # focus position status
+            print(f"Limit flags: {self.message_bytes[0:1].hex()}")
+            print(f"static?(00): {self.message_bytes[1:2].hex()}")
+            if self.message_bytes[2:3] == '00':
+                print(f"focus position (MAX): {self.message_bytes[2:3].hex()}")
+            else:
+                print(f"focus position: {self.message_bytes[2:3].hex()}")
+            print(f"static?(10): {self.message_bytes[3:4].hex()}")
+            print(f"static?(00): {self.message_bytes[4:5].hex()}")
+            print(f"static?(00): {self.message_bytes[5:6].hex()}")
+            print(f"static?(00): {self.message_bytes[6:7].hex()}")
+            print(f"static?(00): {self.message_bytes[7:8].hex()}")
+            print(f"static?(00): {self.message_bytes[8:9].hex()}")
+            print(f"leftover?: {self.message_bytes[9:].hex()}")
+        elif self.message_type == '05': # aperture status
+            print(f"Focus ?: {self.message_bytes[20:22].hex()}")
+            print(f"Focus pos: {self.message_bytes[23:24].hex()}")
+            print(f"Aperture (00 brightest; 4AB darkest): {self.message_bytes[30:32].hex()}")
+            print(f"Aperture??: {self.message_bytes[33:40].hex()}")
+            print(f"Focus moving flag: {self.message_bytes[60:61].hex()}")
+            print(f"Target 1: {self.message_bytes[77:78].hex()}")
+        elif self.message_type == '03': # aperture
+            print(f"Liveness? (00/01): {self.message_bytes[12:13].hex()}")
+            print(f"Target 1? (15/17): {self.message_bytes[21:22].hex()}")
+            print(f"Target 2? (15/17): {self.message_bytes[22:23].hex()}")
+
 
     def prettyprint(self):
         print(f"[{self.direction}] SOM: 0x{self.som}, length: {self.message_length} (ushortle), class: 0x{self.pp_message_class()}, seq: 0x{self.seq_number}, type: 0x{self.pp_message_type()}")
         print(f"  Message (hex): {self.message}")
         print(f"  Message (bytes): {self.bytes}")
+        try:
+            print(f"  Message (string): {self.bytes.decode('utf-8')}")
+        except UnicodeDecodeError:
+            pass
         print(f"  Checksum: {self.checksum} (ushortle), EOM: 0x{self.eom}")
         print(f"  Valid checksum: {self.checksum == self.computed_checksum}")
         print(f"  Valid length: {self.message_length == len(self.bytes)}")
-        self.message_bruteforce()
+        print()
+        self.decode_message()
+        #self.message_bruteforce()
 
 
 def pretty(line):
@@ -124,6 +167,9 @@ with open(sys.argv[1], 'r') as file:
         if not line.startswith("#"):
             if process and processed >= process:
                 break
-            pretty(line)
-            print("")
-            processed += 1
+            try:
+                pretty(line)
+                print("")
+                processed += 1
+            except IndexError:
+                print(f"Invalid message: {line}")
