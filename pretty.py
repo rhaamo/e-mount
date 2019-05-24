@@ -121,7 +121,7 @@ class Message():
             print(f"Focus pos: {self.message_bytes[23:24].hex()}")
             print(f"Aperture (00 brightest; 4AB darkest): {self.message_bytes[30:32].hex()}")
             print(f"Aperture??: {self.message_bytes[33:40].hex()}")
-            print(f"Focus moving flag: {self.message_bytes[60:61].hex()}")
+            print(f"Focus moving flag: {self.message_bytes[60:61].hex()} (00 no motion; 255/ff focus++; 01 focus--??; linked to 0x06 focus position status byte 2: position)")
             print(f"Target 1: {self.message_bytes[77:78].hex()}")
             print(f"Target 2: {self.message_bytes[78:79].hex()}")
             print(f"??: {self.message_bytes[81:82].hex()}")
