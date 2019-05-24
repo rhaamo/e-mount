@@ -20,7 +20,7 @@ class Message():
         self.bytes = bytes.fromhex(raw)
 
     def parse(self):
-        print(f"{self.direction} Parsing '{str.upper(self.bytes.hex())}'")
+        print(f"[{self.direction}] RAW Message '{str.upper(self.bytes.hex())}'")
         self.som = str.upper(self.bytes[0:1].hex()) # byte 0
         self.message_length = struct.unpack("<H", self.bytes[1:3])[0] # byte 1,2; 16-bit length
         self.message_class = str.upper(self.bytes[3:4].hex()) # byte 3
@@ -100,36 +100,39 @@ class Message():
 
     def decode_message(self):
         if self.message_type == '06': # focus position status
-            print(f"Limit flags: {self.message_bytes[0:1].hex()}")
-            print(f"static?(00): {self.message_bytes[1:2].hex()}")
+            print("Decoding of focus position status:")
+            print(f"  Limit flags: {self.message_bytes[0:1].hex()}")
+            print(f"  static?(00): {self.message_bytes[1:2].hex()}")
             if self.message_bytes[2:3] == '00':
-                print(f"focus position (MAX): {self.message_bytes[2:3].hex()}")
+                print(f"  focus position (MAX): {self.message_bytes[2:3].hex()}")
             else:
-                print(f"focus position: {self.message_bytes[2:3].hex()}")
-            print(f"static?(10): {self.message_bytes[3:4].hex()}")
-            print(f"static?(00): {self.message_bytes[4:5].hex()}")
-            print(f"static?(00): {self.message_bytes[5:6].hex()}")
-            print(f"static?(00): {self.message_bytes[6:7].hex()}")
-            print(f"static?(00): {self.message_bytes[7:8].hex()}")
-            print(f"static?(00): {self.message_bytes[8:9].hex()}")
-            print(f"(3F): {self.message_bytes[9:10].hex()}")
-            print(f"(10): {self.message_bytes[10:11].hex()}")
-            print(f"(00): {self.message_bytes[11:12].hex()}")
-            print(f"leftover?: {self.message_bytes[12:].hex()}")
+                print(f"  focus position: {self.message_bytes[2:3].hex()}")
+            print(f"  static?(10): {self.message_bytes[3:4].hex()}")
+            print(f"  static?(00): {self.message_bytes[4:5].hex()}")
+            print(f"  static?(00): {self.message_bytes[5:6].hex()}")
+            print(f"  static?(00): {self.message_bytes[6:7].hex()}")
+            print(f"  static?(00): {self.message_bytes[7:8].hex()}")
+            print(f"  static?(00): {self.message_bytes[8:9].hex()}")
+            print(f"  (3F): {self.message_bytes[9:10].hex()}")
+            print(f"  (10): {self.message_bytes[10:11].hex()}")
+            print(f"  (00): {self.message_bytes[11:12].hex()}")
+            print(f"  leftover?: {self.message_bytes[12:].hex()}")
         elif self.message_type == '05': # aperture status
-            print(f"Focus ?: {self.message_bytes[20:22].hex()}")
-            print(f"Focus pos: {self.message_bytes[23:24].hex()}")
-            print(f"Aperture (00 brightest; 4AB darkest): {self.message_bytes[30:32].hex()}")
-            print(f"Aperture??: {self.message_bytes[33:40].hex()}")
-            print(f"Focus moving flag: {self.message_bytes[60:61].hex()} (00 no motion; 255/ff focus++; 01 focus--??; linked to 0x06 focus position status byte 2: position)")
-            print(f"Target 1: {self.message_bytes[77:78].hex()}")
-            print(f"Target 2: {self.message_bytes[78:79].hex()}")
-            print(f"??: {self.message_bytes[81:82].hex()}")
-            print(f"{self.message_bytes[84:85].hex()}")
+            print("Decoding of aperture status:")
+            print(f"  Focus ?: {self.message_bytes[20:22].hex()}")
+            print(f"  Focus pos: {self.message_bytes[23:24].hex()}")
+            print(f"  Aperture (00 brightest; 4AB darkest): {self.message_bytes[30:32].hex()}")
+            print(f"  Aperture??: {self.message_bytes[33:40].hex()}")
+            print(f"  Focus moving flag: {self.message_bytes[60:61].hex()} (00 no motion; 255/ff focus++; 01 focus--??; linked to 0x06 focus position status byte 2: position)")
+            print(f"  Target 1: {self.message_bytes[77:78].hex()}")
+            print(f"  Target 2: {self.message_bytes[78:79].hex()}")
+            print(f"  ??: {self.message_bytes[81:82].hex()}")
+            print(f"  {self.message_bytes[84:85].hex()}")
         elif self.message_type == '03': # aperture
-            print(f"Liveness? (00/01): {self.message_bytes[12:13].hex()}")
-            print(f"Target 1? (15/17): {self.message_bytes[21:22].hex()}")
-            print(f"Target 2? (15/17): {self.message_bytes[22:23].hex()}")
+            print("Decoding of aperture:")
+            print(f"  Liveness? (00/01): {self.message_bytes[12:13].hex()}")
+            print(f"  Target 1? (15/17): {self.message_bytes[21:22].hex()}")
+            print(f"  Target 2? (15/17): {self.message_bytes[22:23].hex()}")
 
 
     def prettyprint(self):
